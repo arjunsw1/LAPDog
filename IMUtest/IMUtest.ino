@@ -10,6 +10,7 @@ Adafruit_10DOF                dof   = Adafruit_10DOF();
 Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(30301);
 Adafruit_LSM303_Mag_Unified   mag   = Adafruit_LSM303_Mag_Unified(30302);
 Adafruit_BMP085_Unified       bmp   = Adafruit_BMP085_Unified(18001);
+Adafruit_L3GD20_Unified       gyro  = Adafruit_L3GD20_Unified(20);
 
 /* Update this with the correct SLP for accurate altitude measurements */
 float seaLevelPressure = SENSORS_PRESSURE_SEALEVELHPA;
@@ -65,6 +66,7 @@ void loop(void)
   sensors_event_t accel_event;
   sensors_event_t mag_event;
   sensors_event_t bmp_event;
+  sensors_event_t gyro_event;
   sensors_vec_t   orientation;
 
   /* Calculate pitch and roll from the raw accelerometer data */
@@ -90,6 +92,12 @@ void loop(void)
     Serial.print(F("; "));
   }
 
+  gyro.getEvent(&gyro_event);
+  Serial.print(F("GYRO  "));
+  Serial.print("X: "); Serial.print(gyro_event.gyro.x); Serial.print("  ");
+  Serial.print("Y: "); Serial.print(gyro_event.gyro.y); Serial.print("  ");
+  Serial.print("Z: "); Serial.print(gyro_event.gyro.z); Serial.print("  ");Serial.println("rad/s ");
+  
   /* Calculate the altitude using the barometric pressure sensor */
   bmp.getEvent(&bmp_event);
   if (bmp_event.pressure)
