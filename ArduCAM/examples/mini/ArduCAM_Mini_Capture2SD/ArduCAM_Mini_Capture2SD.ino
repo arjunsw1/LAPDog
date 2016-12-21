@@ -19,16 +19,11 @@
 #include "memorysaver.h"
 //This demo can only work on OV2640_MINI_2MP or OV5642_MINI_5MP or OV5642_MINI_5MP_BIT_ROTATION_FIXED
 //or OV5640_MINI_5MP_PLUS or ARDUCAM_SHIELD_V2 platform.
-#if !(defined OV5642_MINI_5MP || defined OV5642_MINI_5MP_BIT_ROTATION_FIXED || defined OV2640_MINI_2MP)
-  #error Please select the hardware platform and camera module in the ../libraries/ArduCAM/memorysaver.h file
-#endif
-#define SD_CS 9
-const int SPI_CS = 7;
-#if defined (OV2640_MINI_2MP)
+
+#define SD_CS 9//needs to be D14 for pro mini, 9 on unod
+const int SPI_CS = 10;
 ArduCAM myCAM( OV2640, SPI_CS );
-#else
-ArduCAM myCAM( OV5642, SPI_CS );
-#endif
+
 
 void myCAMSaveToSDFile(){
   char str[8];
@@ -141,7 +136,7 @@ void setup(){
    myCAM.set_format(JPEG);
    myCAM.InitCAM();
  #if defined (OV2640_MINI_2MP)
-   myCAM.OV2640_set_JPEG_size(OV2640_320x240);
+   myCAM.OV2640_set_JPEG_size(OV2640_1280x1024);
   #else
    myCAM.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
    myCAM.OV5642_set_JPEG_size(OV5642_320x240);
