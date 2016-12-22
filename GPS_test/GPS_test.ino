@@ -10,14 +10,12 @@
 
 #include <SoftwareSerial.h> 
 
-SoftwareSerial GPS_Serial(10, 11); // RX, TX
-SoftwareSerial USB_Serial(10,11);
+SoftwareSerial GPS_Serial(4, 3); // RX, TX
 
 void setup() {
   Serial.begin(9600);
   GPS_Serial.begin(9600);
-  USB_Serial.begin(9600);
-  USB_Serial.write("Goodnight moon!"); 
+ Serial.println("Goodnight moon!"); 
 }
 
 void loop() {
@@ -25,10 +23,7 @@ void loop() {
 
    if (GPS_Serial.available()){
         rc = GPS_Serial.read();
-        USB_Serial.write(rc);
+        Serial.print(rc);
    }
-   if(Serial.available())
-   {
-    USB_Serial.write(GPS_Serial.read());
-   }
+   //Serial.println(' ');
 }
