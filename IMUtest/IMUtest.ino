@@ -96,7 +96,8 @@ void loop(void)
   Serial.print(F("GYRO  "));
   Serial.print("X: "); Serial.print(gyro_event.gyro.x); Serial.print("  ");
   Serial.print("Y: "); Serial.print(gyro_event.gyro.y); Serial.print("  ");
-  Serial.print("Z: "); Serial.print(gyro_event.gyro.z); Serial.print("  ");Serial.println("rad/s ");
+  Serial.print("Z: "); Serial.print(gyro_event.gyro.z); Serial.print("  ");
+  Serial.print("rad/s ");
   
   /* Calculate the altitude using the barometric pressure sensor */
   bmp.getEvent(&bmp_event);

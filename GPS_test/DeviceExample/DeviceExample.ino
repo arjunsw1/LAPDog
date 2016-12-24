@@ -33,7 +33,7 @@ void loop()
   // This sketch displays information every time a new sentence is correctly encoded.
   while (ss.available() > 0)
     rc = ss.read();
-    Serial.print(rc);
+    //Serial.print(rc);
     if (gps.encode(rc))
       displayInfo();
 
@@ -55,7 +55,11 @@ void displayInfo()
   }
   else
   {
-    Serial.print(ss);
+    //Serial.print(F("INVALID"));
+    //added by me to test
+    Serial.print(gps.location.lat(), 6);
+    Serial.print(F(","));
+    Serial.print(gps.location.lng(), 6);
   }
 
   Serial.print(F("  Date/Time: "));
@@ -69,7 +73,13 @@ void displayInfo()
   }
   else
   {
-    Serial.print(F("INVALID"));
+    //Serial.print(F("INVALID"));
+    //added by me to test
+    Serial.print(gps.date.month());
+    Serial.print(F("/"));
+    Serial.print(gps.date.day());
+    Serial.print(F("/"));
+    Serial.print(gps.date.year());
   }
 
   Serial.print(F(" "));
@@ -89,7 +99,15 @@ void displayInfo()
   }
   else
   {
-    Serial.print(F("INVALID"));
+    //Serial.print(F("INVALID"));
+    if (gps.time.hour() < 10) Serial.print(F("0"));
+    Serial.print(gps.time.hour());
+    Serial.print(F(":"));
+    if (gps.time.minute() < 10) Serial.print(F("0"));
+    Serial.print(gps.time.minute());
+    Serial.print(F(":"));
+    if (gps.time.second() < 10) Serial.print(F("0"));
+    Serial.print(gps.time.second());
   }
 
   Serial.println();
