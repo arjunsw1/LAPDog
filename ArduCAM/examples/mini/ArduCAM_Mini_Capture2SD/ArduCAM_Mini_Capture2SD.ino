@@ -29,7 +29,7 @@ void myCAMSaveToSDFile(){
   char str[8];
   byte buf[256];
   static int i = 0;
-  static int k = 0;
+  static int file_num = 0;
   uint8_t temp = 0,temp_last=0;
   File file;
   //Flush the FIFO
@@ -43,12 +43,14 @@ void myCAMSaveToSDFile(){
  Serial.println("Capture Done!");  
 
  //Construct a file name
- k = k + 1;
- itoa(k, str, 10);
+ file_num++;
+ itoa(file_num, str, 10);
  strcat(str, ".jpg");
  //Open the new file
- file = SD.open(str, O_WRITE | O_CREAT | O_TRUNC);
- if(! file){
+ file = SD.open(str,O_WRITE | O_CREAT | O_TRUNC); // O_WRITE | O_CREAT | O_TRUNC
+ Serial.println(str);
+ Serial.println(SD.exists(str));
+ if(!SD.exists(str)){
   Serial.println("open file faild");
   return;
  }
@@ -136,7 +138,8 @@ void setup(){
    myCAM.set_format(JPEG);
    myCAM.InitCAM();
  #if defined (OV2640_MINI_2MP)
-   myCAM.OV2640_set_JPEG_size(OV2640_1280x1024);
+   myCAM.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);
+   myCAM.OV2640_set_JPEG_size(OV2640_1600x1200);
   #else
    myCAM.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
    myCAM.OV5642_set_JPEG_size(OV5642_320x240);
