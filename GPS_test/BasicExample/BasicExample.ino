@@ -38,9 +38,6 @@ const char *gpsStream =
 ;
 */
 
-#include <fstream>;
-ifstream infile("GPSdata.txt");
-string gpsStream
 // The TinyGPS++ object
 TinyGPSPlus gps;
 
@@ -54,8 +51,8 @@ void setup()
   Serial.println(F("by Mikal Hart"));
   Serial.println();
 
-  while (infile >> gpsStream)
-    if (gps.encode(gpsStream))
+  while (*gpsStream)
+    if (gps.encode(*gpsStream++))
       displayInfo();
 
   Serial.println();
@@ -80,34 +77,13 @@ void displayInfo()
     Serial.print(F("INVALID"));
   }
 
-  Serial.print(F("  Date/Time: "));
-  if (gps.date.isValid())
+  Serial.print(F("Altitude: "));
+  if (gps.altitude.isValid())
   {
-    Serial.print(gps.date.month());
-    Serial.print(F("/"));
+    Serial.print(gps.altitude.meters());
+    Serial.print(F('m'));
     Serial.print(gps.date.day());
-    Serial.print(F("/"));
-    Serial.print(gps.date.year());
-  }
-  else
-  {
-    Serial.print(F("INVALID"));
-  }
-
-  Serial.print(F(" "));
-  if (gps.time.isValid())
-  {
-    if (gps.time.hour() < 10) Serial.print(F("0"));
-    Serial.print(gps.time.hour());
-    Serial.print(F(":"));
-    if (gps.time.minute() < 10) Serial.print(F("0"));
-    Serial.print(gps.time.minute());
-    Serial.print(F(":"));
-    if (gps.time.second() < 10) Serial.print(F("0"));
-    Serial.print(gps.time.second());
-    Serial.print(F("."));
-    if (gps.time.centisecond() < 10) Serial.print(F("0"));
-    Serial.print(gps.time.centisecond());
+    Serial.print(F("feet"));
   }
   else
   {
