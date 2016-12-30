@@ -94,7 +94,7 @@ void setup() {
   myCAM.set_format(JPEG);
   myCAM.InitCAM();
    #if defined (OV2640_MINI_2MP)
-   myCAM.OV2640_set_JPEG_size(OV2640_320x240);
+   myCAM.OV2640_set_JPEG_size(OV2640_1600x1200);
   #else
    myCAM.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH
    myCAM.OV5642_set_JPEG_size(OV5642_320x240);

@@ -16,12 +16,14 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
+#include <EEPROM.h>
 #include "memorysaver.h"
 //This demo can only work on OV2640_MINI_2MP or OV5642_MINI_5MP or OV5642_MINI_5MP_BIT_ROTATION_FIXED
 //or OV5640_MINI_5MP_PLUS or ARDUCAM_SHIELD_V2 platform.
 
 #define SD_CS 9//needs to be D14 for pro mini, 9 on unod
 const int SPI_CS = 10;
+const int address = 0;
 ArduCAM myCAM( OV2640, SPI_CS );
 
 
@@ -29,16 +31,17 @@ void myCAMSaveToSDFile(){
   char str[8];
   byte buf[256];
   static int i = 0;
-  static int file_num = 0;
+  static int file_num = EEPROM.read(address);
   uint8_t temp = 0,temp_last=0;
   File file;
+  
   //Flush the FIFO
   myCAM.flush_fifo();
   //Clear the capture done flag
   myCAM.clear_fifo_flag();
   //Start capture
   myCAM.start_capture();
-  Serial.println("star Capture");
+  Serial.println("start Capture");
  while(!myCAM.get_bit(ARDUCHIP_TRIG , CAP_DONE_MASK));
  Serial.println("Capture Done!");  
 
@@ -46,6 +49,13 @@ void myCAMSaveToSDFile(){
  file_num++;
  itoa(file_num, str, 10);
  strcat(str, ".jpg");
+ if (file_num < 1000)
+    EEPROM.write(address, file_num);
+ else{
+    file_num = 1;
+    EEPROM.write(address, file_num);
+ }
+    
  //Open the new file
  file = SD.open(str,O_WRITE | O_CREAT | O_TRUNC); // O_WRITE | O_CREAT | O_TRUNC
  Serial.println(str);
@@ -74,7 +84,7 @@ void myCAMSaveToSDFile(){
     myCAM.CS_LOW();
     myCAM.set_fifo_burst();
    }
-   delay(0);  
+   delay(1000);  
  }
  
  //Write the remain bytes in the buffer
@@ -138,7 +148,7 @@ void setup(){
    myCAM.set_format(JPEG);
    myCAM.InitCAM();
  #if defined (OV2640_MINI_2MP)
-   myCAM.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);
+   //myCAM.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);
    myCAM.OV2640_set_JPEG_size(OV2640_1600x1200);
   #else
    myCAM.write_reg(ARDUCHIP_TIM, VSYNC_LEVEL_MASK);   //VSYNC is active HIGH

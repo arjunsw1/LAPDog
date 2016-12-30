@@ -6,11 +6,16 @@
    4800-baud serial GPS device hooked up on pins 4(rx) and 3(tx).
 */
 static const int RXPin = 4, TXPin = 3;
-static const uint32_t GPSBaud = 9600;
+static const uint32_t GPSBaud = 115200;
 
 // The TinyGPS++ object
 TinyGPSPlus gps;
 char rc;
+bool loc_found = 0;
+bool loc_pinned = 0;
+double initial_lat;
+double initial_lng;
+double course_back;
 
 // The serial connection to the GPS device
 SoftwareSerial ss(RXPin, TXPin);
@@ -46,69 +51,54 @@ void loop()
 
 void displayInfo()
 {
-  Serial.print(F("Location: ")); 
+     Serial.print(F("Location: ")); 
   if (gps.location.isValid())
   {
     Serial.print(gps.location.lat(), 6);
     Serial.print(F(","));
     Serial.print(gps.location.lng(), 6);
+    if(!loc_found)
+      loc_found = 1;
   }
   else
   {
-    //Serial.print(F("INVALID"));
-    //added by me to test
-    Serial.print(gps.location.lat(), 6);
-    Serial.print(F(","));
-    Serial.print(gps.location.lng(), 6);
+    Serial.print(F("INVALID"));
   }
 
-  Serial.print(F("  Date/Time: "));
-  if (gps.date.isValid())
+  Serial.print(F(" Altitude: "));
+  if (gps.altitude.isValid())
   {
-    Serial.print(gps.date.month());
-    Serial.print(F("/"));
-    Serial.print(gps.date.day());
-    Serial.print(F("/"));
-    Serial.print(gps.date.year());
+    Serial.print(gps.altitude.meters());
+    Serial.print(F("m "));
+    Serial.print(gps.altitude.feet());
+    Serial.print(F(" feet "));
   }
   else
   {
-    //Serial.print(F("INVALID"));
-    //added by me to test
-    Serial.print(gps.date.month());
-    Serial.print(F("/"));
-    Serial.print(gps.date.day());
-    Serial.print(F("/"));
-    Serial.print(gps.date.year());
+    Serial.print(F("INVALID"));
   }
 
-  Serial.print(F(" "));
-  if (gps.time.isValid())
+  if(loc_pinned)
   {
-    if (gps.time.hour() < 10) Serial.print(F("0"));
-    Serial.print(gps.time.hour());
-    Serial.print(F(":"));
-    if (gps.time.minute() < 10) Serial.print(F("0"));
-    Serial.print(gps.time.minute());
-    Serial.print(F(":"));
-    if (gps.time.second() < 10) Serial.print(F("0"));
-    Serial.print(gps.time.second());
-    Serial.print(F("."));
-    if (gps.time.centisecond() < 10) Serial.print(F("0"));
-    Serial.print(gps.time.centisecond());
-  }
-  else
-  {
-    //Serial.print(F("INVALID"));
-    if (gps.time.hour() < 10) Serial.print(F("0"));
-    Serial.print(gps.time.hour());
-    Serial.print(F(":"));
-    if (gps.time.minute() < 10) Serial.print(F("0"));
-    Serial.print(gps.time.minute());
-    Serial.print(F(":"));
-    if (gps.time.second() < 10) Serial.print(F("0"));
-    Serial.print(gps.time.second());
-  }
+     Serial.print(F(" Distance to Launchpad: "));
+      Serial.print(gps.distanceBetween(initial_lat, initial_lng, gps.location.lat(), gps.location.lng()) );
+      Serial.print(F("m "));
 
+     course_back = gps.courseTo(initial_lat, initial_lng, gps.location.lat(), gps.location.lng());
+     Serial.print(F(" Angle to Launchpad: "));
+     Serial.print(course_back);
+     Serial.print(F(" deg "));
+     Serial.print(gps.cardinal(course_back));
+   }
+  
+  if( (!loc_pinned)&&(loc_found) )
+  {
+    initial_lat = gps.location.lat();
+    initial_lng = gps.location.lng();
+    Serial.print('\n');
+    Serial.println("Start Location Pinned!");
+    loc_pinned = 1;
+  }
+  
   Serial.println();
 }

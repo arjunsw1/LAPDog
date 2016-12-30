@@ -6,9 +6,9 @@
    a serial NMEA GPS device, but this example uses static strings for simplicity.
 */
 // A sample NMEA stream.
-/*
-const char *gpsStream =
 
+const char *gpsStream =
+/*
   "$GPRMC,013403.00,A,3309.05398,N,11708.73566,W,0.076,,241216,,,A*64\r\n"
   "$GPGGA,013402.00,3309.05429,N,11708.73568,W,1,05,3.34,218.1,M,-33.2,M,,*6D\r\n"
   
@@ -17,7 +17,7 @@ const char *gpsStream =
   
   "$GPRMC,013444.00,A,3309.05382,N,11708.73596,W,3.731,,241216,,,A*64\r\n"
   "$GPGGA,013443.00,3309.05248,N,11708.73698,W,1,05,3.33,213.2,M,-33.2,M,,*6A\r\n"
-
+*/
   "$GPVTG,,T,,M,0.009,N,0.016,K,A*2D\r\n"
   "$GPGGA,013402.00,3309.05429,N,11708.73568,W,1,05,3.34,218.1,M,-33.2,M,,*6D\r\n"
   "$GPGSA,A,3,09,26,23,16,07,,,,,,,,4.53,3.34,3.05*0E\r\n"
@@ -36,10 +36,15 @@ const char *gpsStream =
   "$GPGLL,3309.05382,N,11708.73596,W,013444.00,A,A*79\r\n"
   "$GPRMC,013445.00,V,,,,,,,241216,,,N*78\r\n"
 ;
-*/
+
 
 // The TinyGPS++ object
 TinyGPSPlus gps;
+bool loc_found = 0;
+bool loc_pinned = 0;
+double initial_lat;
+double initial_lng;
+double course_back;
 
 void setup()
 {
@@ -65,30 +70,54 @@ void loop()
 
 void displayInfo()
 {
-  Serial.print(F("Location: ")); 
+     Serial.print(F("Location: ")); 
   if (gps.location.isValid())
   {
     Serial.print(gps.location.lat(), 6);
     Serial.print(F(","));
     Serial.print(gps.location.lng(), 6);
+    if(!loc_found)
+      loc_found = 1;
   }
   else
   {
     Serial.print(F("INVALID"));
   }
 
-  Serial.print(F("Altitude: "));
+  Serial.print(F(" Altitude: "));
   if (gps.altitude.isValid())
   {
     Serial.print(gps.altitude.meters());
-    Serial.print(F('m'));
-    Serial.print(gps.date.day());
-    Serial.print(F("feet"));
+    Serial.print(F("m "));
+    Serial.print(gps.altitude.feet());
+    Serial.print(F(" feet "));
   }
   else
   {
     Serial.print(F("INVALID"));
   }
 
+  if(loc_pinned)
+  {
+     Serial.print(F(" Distance to Launchpad: "));
+      Serial.print(gps.distanceBetween(initial_lat, initial_lng, gps.location.lat(), gps.location.lng()) );
+      Serial.print(F("m "));
+
+     course_back = gps.courseTo(initial_lat, initial_lng, gps.location.lat(), gps.location.lng());
+     Serial.print(F(" Angle to Launchpad: "));
+     Serial.print(course_back);
+     Serial.print(F(" deg "));
+     Serial.print(gps.cardinal(course_back));
+   }
+  
+  if( (!loc_pinned)&&(loc_found) )
+  {
+    initial_lat = gps.location.lat();
+    initial_lng = gps.location.lng();
+    Serial.print('\n');
+    Serial.println("Start Location Pinned!");
+    loc_pinned = 1;
+  }
+  
   Serial.println();
 }
