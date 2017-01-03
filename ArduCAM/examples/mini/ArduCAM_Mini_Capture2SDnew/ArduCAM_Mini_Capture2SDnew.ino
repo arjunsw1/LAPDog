@@ -129,7 +129,7 @@ while ( length-- )
       buf[i++] = temp;   
     } 
   } 
-  delay(1000);
+  delay(500); //me
 }
 
 void setup(){
@@ -137,6 +137,8 @@ void setup(){
   uint8_t temp;
 
   Wire.begin();
+  digitalWrite(A4, LOW); //removes internal pullup resistors
+  digitalWrite(A5, LOW); // IMU has built in pull ups
   Serial.begin(115200);
   Serial.println("ArduCAM Start!");
 
@@ -144,8 +146,8 @@ void setup(){
   pinMode(SPI_CS,OUTPUT);
 
   // initialize SPI:
+  delay(500); // added by me
   SPI.begin();
-  delay(1000);
   //Check if the ArduCAM SPI bus is OK
   myCAM.write_reg(ARDUCHIP_TEST1, 0x55);
   temp = myCAM.read_reg(ARDUCHIP_TEST1);

@@ -1,4 +1,4 @@
-1// GPS Module - GP-20U7 - Arduino UNO Example
+// GPS Module - GP-20U7 - Arduino UNO Example
 //
 // Author: Gustavo Bertoli
 //
@@ -13,7 +13,7 @@
 SoftwareSerial GPS_Serial(4, 3); // RX, TX
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   GPS_Serial.begin(9600);
  Serial.println("Goodnight moon!"); 
 }

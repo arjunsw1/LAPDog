@@ -6,11 +6,11 @@
    4800-baud serial GPS device hooked up on pins 4(rx) and 3(tx).
 */
 static const int RXPin = 4, TXPin = 3;
-static const uint32_t GPSBaud = 115200;
+static const uint32_t GPSBaud = 9600;
 
 // The TinyGPS++ object
 TinyGPSPlus gps;
-char rc;
+//char rc;
 bool loc_found = 0;
 bool loc_pinned = 0;
 double initial_lat;
@@ -36,10 +36,14 @@ void setup()
 void loop()
 {
   // This sketch displays information every time a new sentence is correctly encoded.
+  /*if(ss.available()){ //while (ss.available() > 0)
+    rc = ss.read(); 
+    if (gps.encode(rc)) changed by me, original below
+      displayInfo();
+  }*/
+
   while (ss.available() > 0)
-    rc = ss.read();
-    //Serial.print(rc);
-    if (gps.encode(rc))
+    if (gps.encode(ss.read()))
       displayInfo();
 
   if (millis() > 5000 && gps.charsProcessed() < 10)
@@ -61,7 +65,7 @@ void displayInfo()
       loc_found = 1;
   }
   else
-  {
+  {   
     Serial.print(F("INVALID"));
   }
 

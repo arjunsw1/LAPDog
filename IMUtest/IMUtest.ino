@@ -1,8 +1,8 @@
-#include <Wire.h>
-#include <Adafruit_Sensor.h>
-#include <Adafruit_LSM303_U.h>
-#include <Adafruit_BMP085_U.h>
-#include <Adafruit_L3GD20_U.h>
+//#include <Wire.h>
+//#include <Adafruit_Sensor.h>
+//#include <Adafruit_LSM303_U.h>
+//#include <Adafruit_BMP085_U.h>
+//#include <Adafruit_L3GD20_U.h>
 #include <Adafruit_10DOF.h>
 
 /* Assign a unique ID to the sensors */
@@ -63,15 +63,12 @@ void setup(void)
 /**************************************************************************/
 void loop(void)
 {
-  sensors_event_t accel_event;
-  sensors_event_t mag_event;
-  sensors_event_t bmp_event;
-  sensors_event_t gyro_event;
+  sensors_event_t event;
   sensors_vec_t   orientation;
 
   /* Calculate pitch and roll from the raw accelerometer data */
-  accel.getEvent(&accel_event);
-  if (dof.accelGetOrientation(&accel_event, &orientation))
+  accel.getEvent(&event);
+  if (dof.accelGetOrientation(&event, &orientation))
   {
     /* 'orientation' should have valid .roll and .pitch fields */
     Serial.print(F("Roll: "));
@@ -83,8 +80,8 @@ void loop(void)
   }
   
   /* Calculate the heading using the magnetometer */
-  mag.getEvent(&mag_event);
-  if (dof.magGetOrientation(SENSOR_AXIS_Z, &mag_event, &orientation))
+  mag.getEvent(&event);
+  if (dof.magGetOrientation(SENSOR_AXIS_Z, &event, &orientation))
   {
     /* 'orientation' should have valid .heading data now */
     Serial.print(F("Heading: "));
@@ -92,16 +89,17 @@ void loop(void)
     Serial.print(F("; "));
   }
 
-  gyro.getEvent(&gyro_event);
+  //Added gryoscope data
+  gyro.getEvent(&event);
   Serial.print(F("GYRO  "));
-  Serial.print("X: "); Serial.print(gyro_event.gyro.x); Serial.print("  ");
-  Serial.print("Y: "); Serial.print(gyro_event.gyro.y); Serial.print("  ");
-  Serial.print("Z: "); Serial.print(gyro_event.gyro.z); Serial.print("  ");
+  Serial.print("X: "); Serial.print(event.gyro.x); Serial.print("  ");
+  Serial.print("Y: "); Serial.print(event.gyro.y); Serial.print("  ");
+  Serial.print("Z: "); Serial.print(event.gyro.z); Serial.print("  ");
   Serial.print("rad/s ");
   
   /* Calculate the altitude using the barometric pressure sensor */
-  bmp.getEvent(&bmp_event);
-  if (bmp_event.pressure)
+  bmp.getEvent(&event);
+  if (event.pressure)
   {
     /* Get ambient temperature in C */
     float temperature;
@@ -109,7 +107,7 @@ void loop(void)
     /* Convert atmospheric pressure, SLP and temp to altitude    */
     Serial.print(F("Alt: "));
     Serial.print(bmp.pressureToAltitude(seaLevelPressure,
-                                        bmp_event.pressure,
+                                        event.pressure,
                                         temperature)); 
     Serial.print(F(" m; "));
     /* Display the temperature */
