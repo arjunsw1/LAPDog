@@ -1,31 +1,49 @@
-// ArduCAM demo (C)2016 Lee
-// web: http://www.ArduCAM.com
-// This program is a demo of how to use most of the functions
-// of the library with a supported camera modules, and can run on any Arduino platform.
-//
-// This demo was made for Omnivision 2MP/5MP sensor.
-// It will run the ArduCAM ESP8266 5MP as a real 2MP digital camera, provide both JPEG capture.
-// The demo sketch will do the following tasks:
-// 1. Set the sensor to JPEG mode.
-// 2. Capture and buffer the image to FIFO every 5 seconds 
-// 3. Store the image to Micro SD/TF card with JPEG format in sequential.
-// 4. Resolution can be changed by myCAM.set_JPEG_size() function.
-// This program requires the ArduCAM V4.0.0 (or later) library and ArduCAM 2MP/5MP shield
-// and use Arduino IDE 1.5.2 compiler or above
+//Combining ArduCAAM pictures and IMU compass for 360 footage at top of flight
+
 #include <ArduCAM.h>
-#include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
 #include <EEPROM.h>
+#include <Adafruit_10DOF.h> //contains Wire & other adafruit libs
 #include "memorysaver.h"
-//This demo can only work on OV2640_MINI_2MP or OV5642_MINI_5MP or OV5642_MINI_5MP_BIT_ROTATION_FIXED platform.
-#if !(defined OV5642_MINI_5MP || defined OV5642_MINI_5MP_BIT_ROTATION_FIXED || defined OV2640_MINI_2MP)
-  #error Please select the hardware platform and camera module in the ../libraries/ArduCAM/memorysaver.h file
-#endif
-const int SD_CS =9;
-const int SPI_CS = 10;
-const int address = 0;
+
+const int SD_CS =9; //SD Card slave select
+const int SPI_CS = 10; //camera slave select
+const int address = 0; //EEPROM address for file labeling
 ArduCAM myCAM( OV2640, SPI_CS );
+
+//labels sensors, lets you use the functions and data associated with them
+Adafruit_10DOF                dof   = Adafruit_10DOF();
+Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(30301);
+Adafruit_LSM303_Mag_Unified   mag   = Adafruit_LSM303_Mag_Unified(30302);
+Adafruit_BMP085_Unified       bmp   = Adafruit_BMP085_Unified(18001);
+Adafruit_L3GD20_Unified       gyro  = Adafruit_L3GD20_Unified(20);
+float seaLevelPressure = SENSORS_PRESSURE_SEALEVELHPA; //real sea level for accurate altitude
+
+sensors_event_t event;
+sensors_vec_t   orientation;
+
+void initSensors()
+{
+  if(!accel.begin())
+  {
+    /* There was a problem detecting the LSM303 ... check your connections */
+    Serial.println(F("Ooops, no LSM303 detected ... Check your wiring!"));
+    while(1);
+  }
+  if(!mag.begin())
+  {
+    /* There was a problem detecting the LSM303 ... check your connections */
+    Serial.println("Ooops, no LSM303 detected ... Check your wiring!");
+    while(1);
+  }
+  if(!bmp.begin())
+  {
+    /* There was a problem detecting the BMP180 ... check your connections */
+    Serial.println("Ooops, no BMP180 detected ... Check your wiring!");
+    while(1);
+  }
+}
 
 void myCAMSaveToSDFile(){
   char str[8];
@@ -51,6 +69,7 @@ void myCAMSaveToSDFile(){
   
  Serial.println("Capture Done!");  
  length = myCAM.read_fifo_length();
+ 
  Serial.print("The fifo length is :");
  Serial.println(length, DEC);
   if (length >= MAX_FIFO_SIZE) //384K
@@ -63,6 +82,7 @@ void myCAMSaveToSDFile(){
     Serial.println("Size is 0.");
     //return 0;
   }
+  
  //Construct a file name
  file_num++;
  itoa(file_num, str, 10);
@@ -127,14 +147,56 @@ while ( length-- )
   } 
 }
 
-void setup(){
+void pictureLoop(){
+  bool pictures_taken = 0;
+  int orig_heading = 0;
+  int curr_heading = 0;
+  int prev_heading = 0;
+  int pic_count = 0;
+
+  //pulls original heading and starting point
+  mag.getEvent(&event);
+  dof.magGetOrientation(SENSOR_AXIS_Z, &event, &orientation);
+  orig_heading = orientation.heading;
+  prev_heading = orig_heading;
+  
+  while(!pictures_taken)
+  {
+      
+      //finds current heading
+      mag.getEvent(&event);
+      dof.magGetOrientation(SENSOR_AXIS_Z, &event, &orientation);
+      curr_heading = orientation.heading;
+
+      //takes pictures, will take 12 in total, 30 deg between snap
+      myCAMSaveToSDFile();
+      pic_count++;
+      
+      //if current heading is +/- previous heading, rotate right
+      if( (curr_heading < (prev_heading + 5)) && (curr_heading > prev_heading - 5) )
+        delay(2000); //rotate right some amount
+      //if youve passed over 360 and you started 
+      if( (curr_heading < (orig_heading + 5)) && (curr_heading > orig_heading - 5) )
+        
+      
+    prev_heading = curr_heading;
+
+    //takes us out of turning for pictures
+    if(pic_count==12)
+      pictures_taken = 1;
+  }
+}
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(115200);
+  initSensors();
+
   uint8_t vid, pid;
   uint8_t temp;
-
   Wire.begin();
   digitalWrite(A4, LOW); //removes internal pullup resistors
   digitalWrite(A5, LOW); // IMU has built in pull ups
-  Serial.begin(115200);
   Serial.println("ArduCAM Start!");
 
   //set the CS as an output:
@@ -169,14 +231,12 @@ void setup(){
    myCAM.set_format(JPEG);
    myCAM.InitCAM();
    myCAM.OV2640_set_JPEG_size(OV2640_1600x1200);
+
 }
 
-void loop(){
-  myCAMSaveToSDFile();
-  delay(5000);
-   
+void loop() {
   
+  // put your main code here, to run repeatedly:
   
+
 }
-
-
