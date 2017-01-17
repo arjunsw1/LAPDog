@@ -1,0 +1,118 @@
+ArduCAM Start!
+!
+The fifo length is :51205
+241.jpg
+open file failed
+
+
+ArduCAM Start!
+SD Card detected!
+OV2640 detected.
+start Capture
+Capture Done!
+The fifo length is :51205
+241.jpg
+open file failed
+
+
+Picture Count: 1
+Heading: 244.28
+start Capture
+Capture Done!
+The fifo length is :74757
+242.jpg
+open file failed
+
+
+Picture Count: 2
+Heading: 277.46
+start Capture
+Capture Done!
+The fifo length is :68612
+243.jpg
+open file failed
+
+
+Picture Count: 3
+Heading: 312.06
+start Capture
+Capture Done!
+The fifo length is :73733
+244.jpg
+open file failed
+
+
+Picture Count: 4
+Heading: 342.07
+start Capture
+Capture Done!
+The fifo length is :99332
+245.jpg
+open file failed
+
+
+Picture Count: 5
+Heading: 11.28
+start Capture
+Capture Done!
+The fifo length is :77828
+246.jpg
+open file failed
+
+
+Picture Count: 6
+Heading: 41.40
+start Capture
+Capture Done!
+The fifo length is :76804
+247.jpg
+open file failed
+
+
+Picture Count: 7
+Heading: 71.01
+start Capture
+Capture Done!
+The fifo length is :92165
+248.jpg
+open file failed
+
+
+Picture Count: 8
+Heading: 102.49
+start Capture
+Capture Done!
+The fifo length is :76805
+249.jpg
+open file failed
+
+
+Picture Count: 9
+Heading: 134.01
+start Capture
+Capture Done!
+The fifo length is :78853
+250.jpg
+open file failed
+
+
+Picture Count: 10
+Heading: 165.35
+start Capture
+Capture Done!
+The fifo length is :100357
+251.jpg
+open file failed
+
+
+Picture Count: 11
+Heading: 193.59
+start Capture
+Capture Done!
+The fifo length is :110596
+252.jpg
+open file failed
+
+
+Picture Count: 12
+Heading: 224.14

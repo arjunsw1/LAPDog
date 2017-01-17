@@ -16,8 +16,7 @@
 #include <Wire.h>
 #include <ArduCAM.h>
 #include <SPI.h>
-#include <SD.h>
-//#include "SdFat.h"
+#include <SdFat.h>
 #include <EEPROM.h>
 #include "memorysaver.h"
 //This demo can only work on OV2640_MINI_2MP or OV5642_MINI_5MP or OV5642_MINI_5MP_BIT_ROTATION_FIXED platform.
@@ -28,10 +27,8 @@ const int SD_CS =9;
 const int SPI_CS = 10;
 const int address = 0;
 ArduCAM myCAM( OV2640, SPI_CS );
-
-//SdFat SD;
-
-//5 half turns from all the way screwed in puts my cieling in focus ~13ft
+SdFat sd;
+SdFile file;
 
 void myCAMSaveToSDFile(){
   char str[8];
@@ -56,8 +53,8 @@ void myCAMSaveToSDFile(){
  }
   
  Serial.println("Capture Done!");  
- length = myCAM.read_fifo_length();
  
+ length = myCAM.read_fifo_length();
  Serial.print("The fifo length is :");
  Serial.println(length, DEC);
   if (length >= MAX_FIFO_SIZE) //384K
@@ -76,7 +73,7 @@ void myCAMSaveToSDFile(){
  itoa(file_num, str, 10);
  strcat(str, ".jpg");
  //Open the new file
- outFile = SD.open(str, FILE_WRITE);
+ outFile = sd.open(str, FILE_WRITE);//SD.open(str, FILE_WRITE);
  Serial.println(str);
  if(!outFile){
   Serial.println("open file failed");
@@ -101,6 +98,7 @@ while ( length-- )
     if ( (temp == 0xD9) && (temp_last == 0xFF) ) //If find the end ,break while,
     {   Serial.print(temp_last, HEX); //prints out end of JPEG header
         Serial.println(temp,HEX);     //which is FF D9
+        
         buf[i++] = temp;  //save the last  0XD9     
        //Write the remain bytes in the buffer
         myCAM.CS_HIGH();
@@ -127,19 +125,55 @@ while ( length-- )
           myCAM.set_fifo_burst();
         }        
     }
-    else if ((temp == 0xD8) & (temp_last == 0xFF))
+    if ((temp == 0xD8) & (temp_last == 0xFF))
     {
       is_header = true;
       buf[i++] = temp_last;
-      buf[i++] = temp;
+      buf[i++] = temp;   
       Serial.print(temp_last, HEX); //prints out beginning of JPEG header
-      Serial.println(temp,HEX);     //which is FF D8 FF   
+      Serial.println(temp,HEX);     // which is FF D8 FF
     } 
-  } 
-  //Flush the FIFO
-  //myCAM.flush_fifo();
-  //Clear the capture done flag
-  //myCAM.clear_fifo_flag();
+  } /*
+//added from arducam engineer to write proper JPEG data
+  //myCAM.read_fifo(); //read first dummy data
+  //length--;
+  
+while ( length-- )
+{
+  myCAM.CS_LOW(); //guessing as to if this helps
+  temp_last = temp; //low if myCAM., high if outFile., 
+  temp = myCAM.read_fifo();
+  //outFile.write(temp);
+
+  if ( (temp == 0xD9) && (temp_last == 0xFF) ) //If find the end ,break while,
+  { Serial.print(temp_last, HEX); //prints out end of JPEG header
+    Serial.println(temp,HEX);     //which is FF D9
+    
+    myCAM.CS_HIGH();//testing, clenas up file and breaks writing fifo
+    outFile.close();
+    Serial.println("CAM Save OK!");
+    is_header = false;
+    
+    break;
+  }   
+  if (is_header == true)
+  {
+    myCAM.CS_HIGH();//testing
+    outFile.write(temp);      //pushes JPEG header end and rest of the file as well
+  }
+  else if ((temp == 0xD8) && (temp_last == 0xFF))  //match the JPEG header, else if orig
+  {
+    myCAM.CS_HIGH();//testing
+    is_header = true;
+    Serial.print(temp_last, HEX); //prints out beginning of JPEG header
+    Serial.println(temp,HEX);     // which is FF D8 FF
+    outFile.write(temp_last);
+    outFile.write(temp);
+  }
+  delayMicroseconds(12);
+ }*/
+
+  //code from millerlp Time Lapse arducam code for writing JPEG
 }
 
 void setup(){
@@ -166,7 +200,7 @@ void setup(){
     while(1);
   }
     //Initialize SD Card
-  if(!SD.begin(SD_CS)){
+  if(!sd.begin(SD_CS)){
     Serial.println("SD Card Error");
   }
   else
