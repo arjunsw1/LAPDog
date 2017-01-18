@@ -22,6 +22,7 @@ float seaLevelPressure = SENSORS_PRESSURE_SEALEVELHPA;
 /**************************************************************************/
 void initSensors()
 {
+  Serial.println("Testing sensors");
   if(!accel.begin())
   {
     /* There was a problem detecting the LSM303 ... check your connections */
