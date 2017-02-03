@@ -4,6 +4,8 @@ Servo FL_ESC, FR_ESC, RL_ESC, RR_ESC; //Create Servo object for each ESC
 int Init_PB = 2;  // Flight initiation PB input
 int Init_LED = 3; // Flight initiation PB LED output
 int Grn_LED = 12; // Green indicator LED
+int ESC_speed = 0; //Implements speed variable
+bool rate = true;  // True = speed up, False = slow down
 
 void setup() {
   Serial.begin(9600);  // start serial at 9600 baud
@@ -24,16 +26,29 @@ void setSpeed(int speed){
 }
 
 void loop() {
-  if(digitalRead(Init_PB)) {
+
+  if(ESC_speed == 0)
+    rate = true;
+  if(ESC_speed == 25)
+    rate = false;
+  
+  if(digitalRead(Init_PB) && rate) { //Increasing speed
     analogWrite(Init_LED, 255);
     analogWrite(Grn_LED, 255);
-    setSpeed(50);
-  }
-  
+    ESC_speed += 1; 
+    }
+  else if(digitalRead(Init_PB) && !rate) { //Decreasing speed
+    analogWrite(Init_LED, 255);
+    analogWrite(Grn_LED, 255);
+    ESC_speed -= 1; 
+    }      
   else {
     analogWrite(Init_LED, 0);
     analogWrite(Grn_LED, 0);
-    setSpeed(0);
-  }    
-}
+    ESC_speed = 0; 
+  } 
+  
+  setSpeed(ESC_speed);
+  delay(100);
 
+}
