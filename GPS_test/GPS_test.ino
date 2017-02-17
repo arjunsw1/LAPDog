@@ -10,7 +10,7 @@
 
 #include <SoftwareSerial.h> 
 
-SoftwareSerial GPS_Serial(4, 3); // RX, TX
+SoftwareSerial GPS_Serial(13, 15); // RX, TX
 
 void setup() {
   Serial.begin(115200);

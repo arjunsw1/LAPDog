@@ -27,7 +27,7 @@ void loop() {
   if(digitalRead(Init_PB)) {
     analogWrite(Init_LED, 255);
     analogWrite(Grn_LED, 255);
-    setSpeed(50);
+    setSpeed(25);
   }
   
   else {
