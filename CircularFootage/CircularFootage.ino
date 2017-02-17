@@ -9,10 +9,11 @@
 
 //Mag I2C address is 0x1E
 
-const int SD_CS = 9; //SD Card slave select
+const int SD_CS = 14; //SD Card slave select
 const int SPI_CS = 10; //camera slave select
-const int address = 0; //EEPROM address for file labeling
+const int address = 50; //EEPROM address for file labeling
 ArduCAM myCAM( OV2640, SPI_CS );
+bool pictures_taken = 0;
 
 //labels sensors, lets you use the functions and data associated with them
 Adafruit_10DOF                dof   = Adafruit_10DOF();
@@ -158,7 +159,6 @@ while ( length-- )
 }
 
 void pictureLoop(){
-  bool pictures_taken = 0;
   int pic_count = 0;
   myCAMSaveToSDFile();
   
@@ -174,9 +174,9 @@ void pictureLoop(){
       //diagnostic text
       //Serial.print(F("Picture Count: "));
       //Serial.println(pic_count);
-      //Serial.print(F("Heading: "));
-      //Serial.print(orientation.heading);
-      //Serial.println('\n');
+      Serial.print(F("Heading: "));
+      Serial.print(orientation.heading);
+      Serial.println('\n');
       
     //takes us out of turning for pictures
     if(pic_count==12)
@@ -263,17 +263,26 @@ void setup() {
 void loop() {
   
   // put your main code here, to run repeatedly:
-   myCAMSaveToSDFile(); //added to test picture taking with IMU 
+   //myCAMSaveToSDFile(); //added to test picture taking with IMU 
    
   //Wire.beginTransmission(0x1E);
-   mag.getEvent(&event);
-   dof.magGetOrientation(SENSOR_AXIS_Z, &event, &orientation);
-   Serial.print(F("Heading: "));
-   Serial.print(orientation.heading);
+   //mag.getEvent(&event);
+   //dof.magGetOrientation(SENSOR_AXIS_Z, &event, &orientation);
+   //Serial.print(F("Heading: "));
+   //Serial.print(orientation.heading);
    //Serial.println('\n');
   // Wire.endTransmission();
    //fifo is constantly 524287, possible I2C error even when IMU unplugged
    
-   delay(5000);
+   //delay(5000);
 
+   if((digitalRead(15) == HIGH) && (picturestaken == 0)){
+     myCAMSaveToSDFile();
+     pictures_taken = 1;
+   }
+   
+
+   if((digitalRead(15) == LOW) && (picturestaken == 1))
+    pictures_taken = 0;
+    
 }
