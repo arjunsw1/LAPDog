@@ -21,9 +21,9 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PID gain and limit settings
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-float pid_p_gain_roll = 0;               //Gain setting for the roll P-controller (1.3)
-float pid_i_gain_roll = 0;              //Gain setting for the roll I-controller (0.05)
-float pid_d_gain_roll = 0;                //Gain setting for the roll D-controller (15)
+float pid_p_gain_roll = 0.6;               //Gain setting for the roll P-controller (1.3)
+float pid_i_gain_roll = 0.02;              //Gain setting for the roll I-controller (0.05)
+float pid_d_gain_roll = 11;                //Gain setting for the roll D-controller (15)
 int pid_max_roll = 400;                    //Maximum output of the PID-controller (+/-)
 
 float pid_p_gain_pitch = pid_p_gain_roll;  //Gain setting for the pitch P-controller.
@@ -39,17 +39,17 @@ int pid_max_yaw = 400;                     //Maximum output of the PID-controlle
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Declaring global variables
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-byte last_channel_1, last_channel_2, last_channel_3, last_channel_4, last_channel_5;
+byte last_channel_1, last_channel_2, last_channel_3, last_channel_4, last_channel_5, last_channel_6;
 byte eeprom_data[36];
 byte highByte, lowByte;
-volatile int receiver_input_channel_1, receiver_input_channel_2, receiver_input_channel_3, receiver_input_channel_4, receiver_input_channel_5;
+volatile int receiver_input_channel_1, receiver_input_channel_2, receiver_input_channel_3, receiver_input_channel_4, receiver_input_channel_5, receiver_input_channel_6;
 int counter_channel_1, counter_channel_2, counter_channel_3, counter_channel_4, loop_counter;
 int esc_1, esc_2, esc_3, esc_4;
 int throttle, battery_voltage;
 int cal_int, start, gyro_address;
-int receiver_input[5];
+int receiver_input[7];
 unsigned long timer_channel_1, timer_channel_2, timer_channel_3, timer_channel_4, esc_timer, esc_loop_timer;
-unsigned long timer_1, timer_2, timer_3, timer_4, timer_5, current_time;
+unsigned long timer_1, timer_2, timer_3, timer_4, timer_5, timer_6, current_time;
 unsigned long loop_timer;
 double gyro_pitch, gyro_roll, gyro_yaw;
 double gyro_axis[4], gyro_axis_cal[4];
@@ -73,7 +73,6 @@ void setup(){
   //Arduino (Atmega) pins default to inputs, so they don't need to be explicitly declared as inputs.
   DDRD |= B11110000;                                           //Configure digital poort 4, 5, 6 and 7 as output.
   DDRB |= B00110000;                                           //Configure digital poort 12 and 13 as output.
-  DDRC |= B00000010;                                           //Configure digital port 15 as input
     
   //Use the led on the Arduino for startup indication.
   digitalWrite(12,HIGH);                                       //Turn on the warning led.
@@ -114,7 +113,9 @@ void setup(){
   PCMSK0 |= (1 << PCINT2);                                     //Set PCINT2 (digital input 10)to trigger an interrupt on state change.
   PCMSK0 |= (1 << PCINT3);                                     //Set PCINT3 (digital input 11)to trigger an interrupt on state change.
 
-  PCMSK0 |= (1 << PCINT4);                                     //Set PCINT4 (digital input 15)to trigger an interrupt on state change.
+  PCICR |= (1 << PCIE1);                                       //Set PCIE1 to enable PCMSK1 scan.
+  PCMSK1 |= (1 << PCINT9);                                     //Set PCINT9 (digital input 15)to trigger an interrupt on state change.
+  PCMSK1 |= (1 << PCINT10);                                    //Set PCINT10 (digital input 16)to trigger an interrupt on state change.
 
   //Wait until the receiver is active and the throtle is set to the lower position.
   while(receiver_input_channel_3 < 990 || receiver_input_channel_3 > 1020 || receiver_input_channel_4 < 1400){
@@ -139,7 +140,7 @@ void setup(){
   //12.6V equals 1023 analogRead(0).
   //1260 / 1023 = 1.2317.
   //The variable battery_voltage holds 1050 if the battery voltage is 10.5V.
-  battery_voltage = (analogRead(0) + 65) * 1.2317;
+  battery_voltage = (analogRead(0)) * 1.2317;
   
   //When everything is done, turn off the led.
   digitalWrite(12,LOW);                                        //Turn off the warning led.
@@ -154,7 +155,8 @@ void loop(){
   receiver_input_channel_3 = convert_receiver_channel(3);      //Convert the actual receiver signals for throttle to the standard 1000 - 2000us.
   receiver_input_channel_4 = convert_receiver_channel(4);      //Convert the actual receiver signals for yaw to the standard 1000 - 2000us.
 
-  receiver_input_channel_5 = convert_receiver_channel(5);      //Read the receiver signals for killswitch
+  receiver_input_channel_5 = receiver_input[5];      //Read the receiver signals for killswitch
+  receiver_input_channel_6 = receiver_input[6];      //Read the receiver signals for camera trigger switch
   
   //Let's get the current gyro data and scale it to degrees per second for the pid calculations.
   gyro_signalen();
@@ -180,13 +182,30 @@ void loop(){
   if(start == 2 && receiver_input_channel_3 < 1050 && receiver_input_channel_4 > 1950)start = 0;
   
   //Stopping the motors: killswitch triggered.
-  if(start == 2 && receiver_input_channel_5 == 1000)start = 0;
-//  //Debugging for killswitch
-//  Serial.print("Channel 5: ");
+  if(start == 2 && receiver_input_channel_5 > 1250)start = 0;
+  
+  //Triggering image capture output from receiver switch input
+  if(receiver_input_channel_6 > 1250) {
+    digitalWrite(17, HIGH);               //Output trigger high
+    analogWrite(3, 255);                  //Camera LED indicator on
+  }
+  else {
+    digitalWrite(17, LOW);                //Output trigger low
+    analogWrite(3, 0);                    //Camera LED indicator off
+  }
+//  //Debugging for CH 5/6 switch inputs
+//  Serial.print("Channel 5 raw: ");
+//  Serial.print(receiver_input[5]);
+//  Serial.print("\tChannel 5: ");
 //  Serial.print(receiver_input_channel_5);
-//  Serial.print("\tStart value: ");
+//  Serial.print("\tStart Value: ");
 //  Serial.print(start);
 //  Serial.print("\n");
+//  Serial.print("Channel 6 raw: ");
+//  Serial.print(receiver_input[6]);
+//  Serial.print("\tChannel 6: ");
+//  Serial.print(receiver_input_channel_6);
+//  Serial.print("\n\n");
 //  delay(200);
   
   //The PID set point in degrees per second is determined by the roll receiver input.
@@ -211,6 +230,7 @@ void loop(){
     if(receiver_input_channel_4 > 1508)pid_yaw_setpoint = (receiver_input_channel_4 - 1508)/3.0;
     else if(receiver_input_channel_4 < 1492)pid_yaw_setpoint = (receiver_input_channel_4 - 1492)/3.0;
   }
+  
   //PID inputs are known. So we can calculate the pid output.
   calculate_pid();
   
@@ -221,6 +241,12 @@ void loop(){
   
   //Turn on the led if battery voltage is to low.
   if(battery_voltage < 1030 && battery_voltage > 600)digitalWrite(12, HIGH);
+
+//  //Debugging for low-voltage indicator
+//  Serial.print("battery_voltage: ");
+//  Serial.print(battery_voltage);
+//  Serial.print("\n");
+//  delay(200);
   
   throttle = receiver_input_channel_3;                                      //We need the throttle signal as a base signal.
   
@@ -277,7 +303,7 @@ void loop(){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//This routine is called every time input 8, 9, 10 or 11 changed state
+//This routine is called every time input 8, 9, 10 or 11 changes state
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ISR(PCINT0_vect){
   current_time = micros();
@@ -337,6 +363,47 @@ ISR(PCINT0_vect){
   else if(last_channel_5 == 1){                                //Input 15 is not high and changed from 1 to 0
     last_channel_5 = 0;                                        //Remember current input statef
     receiver_input[5] = current_time - timer_5;                //Channel 5 is current_time - timer_5
+  }
+
+  //Channel 6=========================================
+  if(PINC & B00000100){                                        //Is input 16 high?
+    if(last_channel_6 == 0){                                   //Input 16 changed from 0 to 1
+      last_channel_6 = 1;                                      //Remember current input state
+      timer_6 = current_time;                                  //Set timer_6 to current_time
+    }
+  }
+  else if(last_channel_6 == 1){                                //Input 16 is not high and changed from 1 to 0
+    last_channel_6 = 0;                                        //Remember current input statef
+    receiver_input[6] = current_time - timer_6;                //Channel 6 is current_time - timer_6
+  }
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//This routine is called every time input 15 or 16 changes state
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ISR(PCINT1_vect){
+  current_time = micros();
+  //Channel 5=========================================
+  if(PINC & B00000010){                                        //Is input 15 high?
+    if(last_channel_5 == 0){                                   //Input 15 changed from 0 to 1
+      last_channel_5 = 1;                                      //Remember current input state
+      timer_5 = current_time;                                  //Set timer_5 to current_time
+    }
+  }
+  else if(last_channel_5 == 1){                                //Input 15 is not high and changed from 1 to 0
+    last_channel_5 = 0;                                        //Remember current input statef
+    receiver_input[5] = current_time - timer_5;                //Channel 5 is current_time - timer_5
+  }
+
+  //Channel 6=========================================
+  if(PINC & B00000100){                                        //Is input 16 high?
+    if(last_channel_6 == 0){                                   //Input 16 changed from 0 to 1
+      last_channel_6 = 1;                                      //Remember current input state
+      timer_6 = current_time;                                  //Set timer_6 to current_time
+    }
+  }
+  else if(last_channel_6 == 1){                                //Input 16 is not high and changed from 1 to 0
+    last_channel_6 = 0;                                        //Remember current input statef
+    receiver_input[6] = current_time - timer_6;                //Channel 6 is current_time - timer_6
   }
 }
 
@@ -435,16 +502,14 @@ void calculate_pid(){
 //This part converts the actual receiver signals to a standardized 1000 – 1500 – 2000 microsecond value.
 //The stored data in the EEPROM is used.
 int convert_receiver_channel(byte function){
-  byte channel, reverse;                                                       //First we declare some local variables
+  byte channel, reverse;                                                        //First we declare some local variables
   int low, center, high, actual;
   int difference;
 
-  if(function == 5)function = 3;                                              //Use stored data for channel 3 to convert signal for channel 5
-  
   channel = eeprom_data[function + 23] & 0b00000111;                           //What channel corresponds with the specific function
   if(eeprom_data[function + 23] & 0b10000000)reverse = 1;                      //Reverse channel when most significant bit is set
   else reverse = 0;                                                            //If the most significant is not set there is no reverse
-  
+    
   actual = receiver_input[channel];                                            //Read the actual receiver value for the corresponding function
   low = (eeprom_data[channel * 2 + 15] << 8) | eeprom_data[channel * 2 + 14];  //Store the low value for the specific receiver input channel
   center = (eeprom_data[channel * 2 - 1] << 8) | eeprom_data[channel * 2 - 2]; //Store the center value for the specific receiver input channel
