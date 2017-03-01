@@ -24,10 +24,11 @@
 #if !(defined OV5642_MINI_5MP || defined OV5642_MINI_5MP_BIT_ROTATION_FIXED || defined OV2640_MINI_2MP)
   #error Please select the hardware platform and camera module in the ../libraries/ArduCAM/memorysaver.h file
 #endif
-const int SD_CS =9;
+const int SD_CS = 14; //9 on Uno
 const int SPI_CS = 10;
 const int address = 0;
 ArduCAM myCAM( OV2640, SPI_CS );
+bool pictures_taken = 0;
 
 //SdFat SD;
 
@@ -187,9 +188,18 @@ void setup(){
 }
 
 void loop(){
-  myCAMSaveToSDFile();
-  delay(5000);
+  //myCAMSaveToSDFile();
+  //delay(5000);
+
+  if((digitalRead(15) == HIGH) )//&& (picturestaken == 0)){
+     myCAMSaveToSDFile();
+     delay(5000);
+     //pictures_taken = 1;
+   }
    
+
+   if((digitalRead(15) == LOW) )//&& (picturestaken == 1))
+    //pictures_taken = 0;
   
   
 }
