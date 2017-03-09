@@ -21,9 +21,9 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PID gain and limit settings
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-float pid_p_gain_roll = 0.6;               //Gain setting for the roll P-controller (1.3)
-float pid_i_gain_roll = 0.02;              //Gain setting for the roll I-controller (0.05)
-float pid_d_gain_roll = 11;                //Gain setting for the roll D-controller (15)
+float pid_p_gain_roll = 1;                 //Gain setting for the roll P-controller (Original: 1.3) Shaking at P=1.8  0.50*1.8=0.9)
+float pid_i_gain_roll = 0.01;                 //Gain setting for the roll I-controller (Original: 0.05) (Stable at P=26  0.75*50=19.5
+float pid_d_gain_roll = 20;              //Gain setting for the roll D-controller (Stable at P=26  0.75*50=19.5)  (Original: 15)
 int pid_max_roll = 400;                    //Maximum output of the PID-controller (+/-)
 
 float pid_p_gain_pitch = pid_p_gain_roll;  //Gain setting for the pitch P-controller.
@@ -186,11 +186,11 @@ void loop(){
   
   //Triggering image capture output from receiver switch input
   if(receiver_input_channel_6 > 1250) {
-    digitalWrite(17, HIGH);               //Output trigger high
+    analogWrite(17, 255);                 //Output trigger high
     analogWrite(3, 255);                  //Camera LED indicator on
   }
   else {
-    digitalWrite(17, LOW);                //Output trigger low
+    analogWrite(17, 0);                   //Output trigger low
     analogWrite(3, 0);                    //Camera LED indicator off
   }
 //  //Debugging for CH 5/6 switch inputs

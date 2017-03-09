@@ -188,17 +188,15 @@ void setup(){
 }
 
 void loop(){
-  //myCAMSaveToSDFile();
-  //delay(5000);
 
-  if((digitalRead(15) == HIGH) )//&& (picturestaken == 0)){
+  if(digitalRead(16)) { //&& (picturestaken == 0)){
      myCAMSaveToSDFile();
      delay(5000);
      //pictures_taken = 1;
    }
    
 
-   if((digitalRead(15) == LOW) )//&& (picturestaken == 1))
+   //if((digitalRead(15) == LOW) )//&& (picturestaken == 1))
     //pictures_taken = 0;
   
   

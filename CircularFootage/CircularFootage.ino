@@ -263,7 +263,7 @@ void setup() {
 void loop() {
   
   // put your main code here, to run repeatedly:
-   //myCAMSaveToSDFile(); //added to test picture taking with IMU 
+   myCAMSaveToSDFile(); //added to test picture taking with IMU 
    
   //Wire.beginTransmission(0x1E);
    //mag.getEvent(&event);
@@ -274,15 +274,17 @@ void loop() {
   // Wire.endTransmission();
    //fifo is constantly 524287, possible I2C error even when IMU unplugged
    
-   //delay(5000);
+   delay(5000);
 
-   if((digitalRead(15) == HIGH) && (picturestaken == 0)){
-     myCAMSaveToSDFile();
-     pictures_taken = 1;
-   }
-   
+//   if((digitalRead(15) == HIGH) && (pictures_taken == 0)){
+//    myCAMSaveToSDFile();
+//    pictures_taken = 1;
+//   }
+//   
+//
+//   if((digitalRead(15) == LOW) && (pictures_taken == 1)) {
+//    pictures_taken = 0;
+//   }
 
-   if((digitalRead(15) == LOW) && (picturestaken == 1))
-    pictures_taken = 0;
     
 }
